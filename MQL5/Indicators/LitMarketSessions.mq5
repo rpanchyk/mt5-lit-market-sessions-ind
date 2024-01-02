@@ -115,20 +115,25 @@ int OnCalculate(const int rates_total,
    int limit = rates_total - prev_calculated;
    Print("rates_total=", rates_total, " prev_calculated=", prev_calculated, " limit=", limit);
 
+   MqlDateTime currMdt;
+   MqlDateTime startMdt;
+   MqlDateTime endMdt;
+
+   datetime currDt;
+   datetime startDt;
+   datetime endDt;
+
    for(int i = limit - 1; i > 0; i--)
      {
       Print(i, " at ", TimeToString(time[i]));
 
-      MqlDateTime currMdt;
       TimeToStruct(time[i], currMdt);
-      datetime currDt = StructToTime(currMdt);
+      currDt = StructToTime(currMdt);
 
-      MqlDateTime startMdt;
       TimeToStruct(time[i], startMdt);
       startMdt.min = 0;
       startMdt.sec = 0;
 
-      MqlDateTime endMdt;
       TimeToStruct(time[i], endMdt);
       endMdt.min = 0;
       endMdt.sec = 0;
@@ -136,8 +141,8 @@ int OnCalculate(const int rates_total,
       // London
       startMdt.hour = 8;
       endMdt.hour = 9;
-      datetime startDt = StructToTime(startMdt);
-      datetime endDt = StructToTime(endMdt);
+      startDt = StructToTime(startMdt);
+      endDt = StructToTime(endMdt);
 
       if(currDt >= startDt && currDt < endDt)
         {
@@ -158,7 +163,7 @@ int OnCalculate(const int rates_total,
       // Tokyo
       startMdt.hour = 23;
       endMdt.hour = 6;
-      startDt = StructToTime(startMdt) - 86400;
+      startDt = StructToTime(startMdt) - 86400; // prev day
       endDt = StructToTime(endMdt);
 
       if(currDt >= startDt && currDt < endDt)
