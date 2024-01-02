@@ -13,14 +13,6 @@
 #include <Object.mqh>
 #include <arrays/arrayobj.mqh>
 
-enum ENUM_FX_SESSION_TYPE
-  {
-   FX_SESSION_LONDON,  // 07 AM to 04 PM [UTC]
-   FX_SESSION_NEWYORK, // 01 PM to 10 PM [UTC]
-   FX_SESSION_SYDNEY,  // 09 PM to 06 AM [UTC]
-   FX_SESSION_TOKYO    // 12 AM to 09 AM [UTC]
-  };
-
 enum ENUM_LIT_SESSION_TYPE
   {
    LIT_SESSION_LONDON,  // 08 AM to 09 AM [UTC] - Open Inducement Window (1 hour)
@@ -119,16 +111,9 @@ int OnCalculate(const int rates_total,
    ArraySetAsSeries(low, true);
 
    int limit = rates_total - prev_calculated;
-//if(limit > rates_total - 2)
-//  {
-//   limit = rates_total - 3;
-//  }
-
-//Print("rates_total=", rates_total, " prev_calculated=", prev_calculated);
-//Print(limit);
+   Print("rates_total=", rates_total, " prev_calculated=", prev_calculated, " limit=", limit);
 
    for(int i = limit - 1; i > 0; i--)
-      //for(int i = 0; i < limit; i++)
      {
       Print(i, " at ", TimeToString(time[i]));
 
@@ -155,44 +140,33 @@ int OnCalculate(const int rates_total,
       if(currDt >= startDt && currDt < endDt)
         {
          addBox(&boxes, LIT_SESSION_LONDON, startDt, endDt, low[i], high[i]);
-         //         Box *box;
-         //         if(boxes.Total() > 0)
-         //           {
-         //            box = boxes.At(boxes.Total() - 1);
-         //
-         //            if(box.start == startDt)
-         //              {
-         //               box.end = endDt;
-         //               box.low = NormalizeDouble(MathMin(box.low, low[i]), _Digits);
-         //               box.high = NormalizeDouble(MathMax(box.high, high[i]), _Digits);
-         //              }
-         //            else
-         //              {
-         //               box = new Box(LIT_SESSION_LONDON, startDt, endDt, NormalizeDouble(low[i], _Digits), NormalizeDouble(high[i], _Digits));
-         //               boxes.Add(box);
-         //              }
-         //           }
-         //         else
-         //           {
-         //            box = new Box(LIT_SESSION_LONDON, startDt, endDt, NormalizeDouble(low[i], _Digits), NormalizeDouble(high[i], _Digits));
-         //            boxes.Add(box);
-         //           }
         }
 
       // New York
+      startMdt.hour = 13;
+      endMdt.hour = 14;
+      startDt = StructToTime(startMdt);
+      endDt = StructToTime(endMdt);
 
+      if(currDt >= startDt && currDt < endDt)
+        {
+         addBox(&boxes, LIT_SESSION_NEWYORK, startDt, endDt, low[i], high[i]);
+        }
 
 
       // Tokyo
+      startMdt.hour = 23;
+      endMdt.hour = 6;
+      startDt = StructToTime(startMdt) - 86400;
+      endDt = StructToTime(endMdt);
 
-
-
-      //Box box = new Box();
-      //boxes.Add(box);
+      if(currDt >= startDt && currDt < endDt)
+        {
+         addBox(&boxes, LIT_SESSION_TOKYO, startDt, endDt, low[i], high[i]);
+        }
      }
 
    Print("boxes=", boxes.Total());
-
    for(int i = 0; i < boxes.Total() - 1; i++)
      {
       Box *box = boxes.At(i);
