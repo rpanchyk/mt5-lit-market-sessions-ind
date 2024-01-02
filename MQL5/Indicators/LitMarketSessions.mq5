@@ -78,10 +78,7 @@ CArrayObj boxes;
 //+------------------------------------------------------------------+
 int OnInit()
   {
-
-
-
-   return(INIT_SUCCEEDED);
+   return INIT_SUCCEEDED;
   }
 
 //+------------------------------------------------------------------+
@@ -89,7 +86,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
   {
-   ObjectsDeleteAll(0, "sb");
+   ObjectsDeleteAll(0, "sbox");
   }
 
 //+------------------------------------------------------------------+
@@ -106,6 +103,11 @@ int OnCalculate(const int rates_total,
                 const long &volume[],
                 const int &spread[])
   {
+   if(rates_total == prev_calculated)
+     {
+      return rates_total;
+     }
+
    ArraySetAsSeries(time, true);
    ArraySetAsSeries(high, true);
    ArraySetAsSeries(low, true);
@@ -153,7 +155,6 @@ int OnCalculate(const int rates_total,
          addBox(&boxes, LIT_SESSION_NEWYORK, startDt, endDt, low[i], high[i]);
         }
 
-
       // Tokyo
       startMdt.hour = 23;
       endMdt.hour = 6;
@@ -167,13 +168,8 @@ int OnCalculate(const int rates_total,
      }
 
    Print("boxes=", boxes.Total());
-   for(int i = 0; i < boxes.Total() - 1; i++)
-     {
-      Box *box = boxes.At(i);
-      box.draw();
-     }
 
-   return(rates_total);
+   return rates_total;
   }
 //+------------------------------------------------------------------+
 
@@ -191,11 +187,15 @@ void addBox(CArrayObj *allBoxes, ENUM_LIT_SESSION_TYPE type, datetime start, dat
       box.end = end;
       box.low = MathMin(box.low, NormalizeDouble(low, _Digits));
       box.high = MathMax(box.high, NormalizeDouble(high, _Digits));
+
+      ObjectsDeleteAll(0, "sbox " + TimeToString(start));
      }
    else
      {
       box = new Box(type, start, end, NormalizeDouble(low, _Digits), NormalizeDouble(high, _Digits));
       boxes.Add(box);
      }
+
+   box.draw();
   }
 //+------------------------------------------------------------------+
