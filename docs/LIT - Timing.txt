@@ -1,0 +1,179 @@
+// LIT Reimfx
+//@version=5
+indicator('LIT - Timing', overlay=true, max_labels_count=500, max_boxes_count=500)
+
+// ---------- INPUTS --------------
+HideTFAbove = input.int(59, 'Hide Boxes on TF above (Minutes)', minval=15, maxval=120)
+HideTFAbove_asia = 60
+
+show_asia      = input(true, 'Show Asian Session')
+show_lon       = input(true, 'Show London Session')
+show_nyt       = input(true, 'Show NY Session')
+
+
+asia_color      = input(color.new(color.rgb(152, 0, 255), 90), 'Asian Fill Color')
+asia_line_color = input(color.new(color.rgb(152, 0, 255), 70), 'Asian Line Color')
+lon_color       = input(color.new(color.rgb(67, 70, 81), 90), 'London Fill Color')
+nyt_color       = input(color.new(color.rgb(67, 70, 81), 90), 'NY Fill Color')
+// ------- END INPUTS -----------
+
+// ---------- FUNCTIONS --------------
+GetTFSeconds() =>
+    (time - time[1]) / 1000
+GetTFMinutes() =>
+    GetTFSeconds() / 60
+TFIsCorrect = GetTFMinutes() <= HideTFAbove
+TFIsCorrect_asia = GetTFMinutes() <= HideTFAbove_asia
+// ---------
+
+GetSessionHighLow(session_active, start) =>
+    var hh = high
+    var ll = low
+
+    if session_active == 1
+        if high > hh or start
+            hh := high
+            hh
+        if low < ll or start
+            ll := low
+            ll
+    [hh, ll]
+// ----------------------------------------------------------------------------------//
+
+CreateSessionBoxT(start_T, hours, session_active, h, l, fillColor, drawLines, lineColor) =>
+    if session_active == 1
+        int timeDelta = time - time[1]
+        int endShift  = hours * 60 * 1000
+        // int endShift = hours * 60 * 60 * 1000
+        box_dev = box.new(left=start_T, bottom=l, top=h, right=start_T + endShift, xloc=xloc.bar_time, bgcolor=fillColor, border_color=color.new(#000000, 100))
+        if session_active[1] == 1
+            box.delete(box_dev[1])
+        if drawLines
+            m = (h + l) / 2
+            h_line = line.new(x1=start_T, y1=h, x2=start_T + endShift * 2, y2=h, xloc=xloc.bar_time, color=lineColor, width=1)
+            m_line = line.new(x1=start_T, y1=m, x2=start_T + endShift * 2, y2=m, xloc=xloc.bar_time, color=lineColor, width=1)
+            l_line = line.new(x1=start_T, y1=l, x2=start_T + endShift * 2, y2=l, xloc=xloc.bar_time, color=lineColor, width=1)
+            if session_active[1] == 1
+                line.delete(h_line[1])
+                line.delete(m_line[1])
+                line.delete(l_line[1])
+// ----------------------------------------------------------------------------------//
+
+// -------- FUNCTIONS END -----------------------------------------------------------//
+
+var asia_hours = 475
+var lon_hours  = 60
+var nyt_hours  = 60
+
+// -------- UTC ---------------------------------------------------------------------//
+UTC_minus_7 = 'UTC-7'
+
+// -------- DLS and timing 2022 -----------------------------------------------------//
+start_22_summer     = timestamp('UTC-7', 2022, 03, 26, 00, 00, 00)
+end_22_summer       = timestamp('UTC-7', 2022, 10, 29, 23, 59, 00)
+start_22_dls_autumn = timestamp('UTC-7', 2022, 10, 30, 00, 00, 00)
+end_22_dls_autumn   = timestamp('UTC-7', 2022, 11, 05, 23, 59, 00)
+start_23_spring     = timestamp('UTC-7', 2023, 03, 12, 00, 00, 00)
+end_23_spring       = timestamp('UTC-7', 2023, 03, 25, 23, 59, 00)
+start_23_summer     = timestamp('UTC-7', 2023, 03, 26, 00, 00, 00)
+end_23_summer       = timestamp('UTC-7', 2023, 10, 29, 23, 59, 00)
+
+// -------- Forex or not ------------------------------------------------------------//
+current_symbol = syminfo.type
+
+asia_timing_14 = "1405-2200:123456"
+asia_timing_15 = "1505-2300:123456"
+
+if current_symbol   != 'forex'
+    asia_timing_14  := "1505-2200:123456"
+    asia_timing_15  := "1605-2300:123456"
+    asia_hours      := 415
+
+time_now = time
+
+// Winter time ----------------------------------------------------------------------//
+t_asia  = time(timeframe.period, asia_timing_15,       UTC_minus_7)
+t_ff    = time(timeframe.period, '0000-0100:23456', UTC_minus_7)
+t_lon   = time(timeframe.period, '0100-0200:23456', UTC_minus_7)
+t_nyt   = time(timeframe.period, '0600-0700:23456', UTC_minus_7)
+
+// Summer 2022
+if time_now <= end_22_summer and time_now >= start_22_summer
+    t_asia  := time(timeframe.period, asia_timing_14, UTC_minus_7)
+    t_ff    := time(timeframe.period, '2300-2401:23456', UTC_minus_7)
+    t_lon   := time(timeframe.period, '0000-0100:23456', UTC_minus_7)
+    t_nyt   := time(timeframe.period, '0500-0600:23456', UTC_minus_7)
+
+// Autumn 2022
+if time_now <= end_22_dls_autumn and time_now >= start_22_dls_autumn
+    t_asia  := time(timeframe.period, asia_timing_14, UTC_minus_7)
+    t_nyt   := time(timeframe.period, '0500-0600:23456', UTC_minus_7)
+
+// Spring 2023
+if time_now <= end_23_spring and time_now >= start_23_spring
+    t_asia  := time(timeframe.period, asia_timing_14, UTC_minus_7)
+    t_nyt   := time(timeframe.period, '0500-0600:23456', UTC_minus_7)
+
+// Summer 2023
+if time_now <= end_23_summer and time_now >= start_23_summer
+    t_asia  := time(timeframe.period, asia_timing_14, UTC_minus_7)
+    t_lon   := time(timeframe.period, '0000-0100:23456', UTC_minus_7)
+    t_nyt   := time(timeframe.period, '0500-0600:23456', UTC_minus_7)
+
+
+// ----------------------------------------------------------------------------------//
+//                    end                                                            //
+// ----------------------------------------------------------------------------------//
+
+// Active Session Conditions --------------------------------------------------------//
+asia_session_active = TFIsCorrect_asia and show_asia      ? not na(t_asia)  ? 1 : 0 : 0
+lon_session_active  = TFIsCorrect      and show_lon       ? not na(t_lon)   ? 1 : 0 : 0
+nyt_session_active  = TFIsCorrect      and show_nyt       ? not na(t_nyt)   ? 1 : 0 : 0
+
+
+// Session Starting Points ----------------------------------------------------------//
+asia_start = asia_session_active[1] == 0 and asia_session_active == 1 ? 1 : 0
+lon_start  = lon_session_active[1]  == 0 and lon_session_active  == 1 ? 1 : 0
+nyt_start  = nyt_session_active[1]  == 0 and nyt_session_active  == 1 ? 1 : 0
+
+// Session Highs & Lows -------------------------------------------------------------//
+[asia_h, asia_l] = GetSessionHighLow(asia_session_active, asia_start)
+[lon_h, lon_l]   = GetSessionHighLow(lon_session_active, lon_start)
+[nyt_h, nyt_l]   = GetSessionHighLow(nyt_session_active, nyt_start)
+
+// Session Box Drawing Function -----------------------------------------------------//
+asia_time_start  = int(na)
+lon_time_start   = int(na)
+nyo_time_start   = int(na)
+nyt_time_start   = int(na)
+asia_time_start := asia_start ? time : asia_time_start[1]
+lon_time_start  := lon_start  ? time : lon_time_start[1]
+nyt_time_start  := nyt_start  ? time : nyt_time_start[1]
+
+
+CreateSessionBoxT(asia_time_start, asia_hours, asia_session_active, asia_h, asia_l, asia_color, true, asia_line_color)
+CreateSessionBoxT(lon_time_start,  lon_hours,  lon_session_active,  lon_h,  lon_l,  lon_color,  false, #000000)
+CreateSessionBoxT(nyt_time_start,  nyt_hours,  nyt_session_active,  nyt_h,  nyt_l,  nyt_color,  false, #000000)
+
+// ----------- YHL,WHL ---------------------------------------------------------------//
+// Inputs
+i_displayLast = input(false, 'Display on current only')
+
+// Variable -------------------------------------------------------------------------//
+yesterdayHigh  = request.security(syminfo.tickerid, 'D', high[1], lookahead=barmerge.lookahead_on)
+yesterdayLow   = request.security(syminfo.tickerid, 'D', low[1], lookahead=barmerge.lookahead_on)
+yesterdayClose = request.security(syminfo.tickerid, 'D', close[1], lookahead=barmerge.lookahead_on)
+weeklyHigh     = request.security(syminfo.tickerid, 'W', high[1], lookahead=barmerge.lookahead_on)
+weeklyLow      = request.security(syminfo.tickerid, 'W', low[1], lookahead=barmerge.lookahead_on)
+
+isLastBar      = request.security(syminfo.tickerid, '', barstate.islast, lookahead=barmerge.lookahead_on)
+plotCondition(_price) =>
+    i_displayLast ? isLastBar ? _price : na : _price
+
+
+// Plots ----------------------------------------------------------------------------//
+plot(plotCondition(weeklyHigh), 'Weekly high', color.new(color.green, 0), style=plot.style_circles, display=display.none)
+plot(plotCondition(weeklyLow), 'Weekly low', color.new(color.red, 0), style=plot.style_circles, display=display.none)
+plot(plotCondition(yesterdayHigh), 'Yesterday\'s high', color.rgb(48, 193, 236), style=plot.style_circles, display=display.none)
+plot(plotCondition(yesterdayLow), 'Yesterday\'s low', color.rgb(48, 193, 236), style=plot.style_circles, display=display.none)
+plot(plotCondition(yesterdayClose), 'Day Open', color.new(color.gray, 0), style=plot.style_cross, display=display.none)
