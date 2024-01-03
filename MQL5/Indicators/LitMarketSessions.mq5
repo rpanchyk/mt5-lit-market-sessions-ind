@@ -15,6 +15,12 @@
 #include <Object.mqh>
 #include <arrays/arrayobj.mqh>
 
+enum ENUM_BORDER_STYLE
+  {
+   BORDER_STYLE_SOLID = STYLE_SOLID, // Solid
+   BORDER_STYLE_DASH = STYLE_DASH // Dash
+  };
+
 enum ENUM_LIT_SESSION_TYPE
   {
    LIT_SESSION_LONDON,  // 08 AM to 09 AM [UTC] - Open Inducement Window (1 hour)
@@ -43,9 +49,16 @@ public:
       if(ObjectFind(0, objName) < 0)
         {
          ObjectCreate(0, objName, OBJ_RECTANGLE, 0, start, low, end, high);
-         ObjectSetInteger(0, objName, OBJPROP_FILL, true);
+
          ObjectSetInteger(0, objName, OBJPROP_COLOR, getTypeAsColor());
+         ObjectSetInteger(0, objName, OBJPROP_FILL, inpFill);
+         ObjectSetInteger(0, objName, OBJPROP_STYLE, inpBoderStyle);
+         ObjectSetInteger(0, objName, OBJPROP_WIDTH, inpBoderWidth);
          ObjectSetInteger(0, objName, OBJPROP_BACK, true);
+         ObjectSetInteger(0, objName, OBJPROP_SELECTABLE, false);
+         ObjectSetInteger(0, objName, OBJPROP_SELECTED, false);
+         ObjectSetInteger(0, objName, OBJPROP_HIDDEN, false);
+         ObjectSetInteger(0, objName, OBJPROP_ZORDER, 0);
         }
      }
 
@@ -60,11 +73,11 @@ public:
       switch(type)
         {
          case  LIT_SESSION_LONDON:
-            return clrLightGreen;
+            return inpLondonSessionColor;
          case  LIT_SESSION_NEWYORK:
-            return clrYellow;
+            return inpNewyorkSessionColor;
          case  LIT_SESSION_TOKYO:
-            return clrGray;
+            return inpTokyoSessionColor;
          default:
             Print("Unknown type");
             return -1;
@@ -94,7 +107,13 @@ double LowBuffer[];
 double HighBuffer[];
 
 // input parameters
-//...
+//sinput string _100 = "=== Section :: Main ===";
+input color inpLondonSessionColor = clrLightGreen; // London session color
+input color inpNewyorkSessionColor = clrYellow; // NewYork session color
+input color inpTokyoSessionColor = clrLightGray; // Tokyo session color
+input bool inpFill = true; // Fill solid (true) or transparent (false)
+input ENUM_BORDER_STYLE inpBoderStyle = BORDER_STYLE_SOLID; // Border line style
+input int inpBoderWidth = 2; // Border line width
 
 // runtime
 CArrayObj boxes;
