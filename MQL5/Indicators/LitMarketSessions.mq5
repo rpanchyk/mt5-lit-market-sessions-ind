@@ -6,8 +6,9 @@
 #property copyright "Copyright 2024, rpanchyk"
 #property link      "https://github.com/rpanchyk/fx-lit-market-sessions"
 #property version   "1.00"
+
 #property indicator_chart_window
-#property indicator_buffers 0
+#property indicator_buffers 3
 #property indicator_plots 0
 
 #include <Object.mqh>
@@ -42,7 +43,7 @@ public:
         {
          ObjectCreate(0, objName, OBJ_RECTANGLE, 0, start, low, end, high);
          ObjectSetInteger(0, objName, OBJPROP_FILL, true);
-         ObjectSetInteger(0, objName, OBJPROP_COLOR, bgColor());
+         ObjectSetInteger(0, objName, OBJPROP_COLOR, getTypeAsColor());
          ObjectSetInteger(0, objName, OBJPROP_BACK, true);
         }
      }
@@ -53,8 +54,7 @@ public:
    double            low;
    double            high;
 
-private:
-   long              bgColor()
+   long              getTypeAsColor()
      {
       switch(type)
         {
@@ -69,8 +69,33 @@ private:
             return -1;
         }
      }
+
+   int               getTypeAsNumber()
+     {
+      switch(type)
+        {
+         case  LIT_SESSION_LONDON:
+            return 1;
+         case  LIT_SESSION_NEWYORK:
+            return 2;
+         case  LIT_SESSION_TOKYO:
+            return 3;
+         default:
+            Print("Unknown type");
+            return -1;
+        }
+     }
   };
 
+// buffers
+double TypeBuffer[];
+double LowBuffer[];
+double HighBuffer[];
+
+// input parameters
+//...
+
+// runtime
 CArrayObj boxes;
 
 //+------------------------------------------------------------------+
@@ -78,6 +103,14 @@ CArrayObj boxes;
 //+------------------------------------------------------------------+
 int OnInit()
   {
+   ArraySetAsSeries(TypeBuffer, true);
+   ArraySetAsSeries(LowBuffer, true);
+   ArraySetAsSeries(HighBuffer, true);
+
+   SetIndexBuffer(0, TypeBuffer, INDICATOR_DATA);
+   SetIndexBuffer(1, LowBuffer, INDICATOR_DATA);
+   SetIndexBuffer(2, HighBuffer, INDICATOR_DATA);
+
    return INIT_SUCCEEDED;
   }
 
@@ -146,7 +179,7 @@ int OnCalculate(const int rates_total,
 
       if(currDt >= startDt && currDt < endDt)
         {
-         addBox(&boxes, LIT_SESSION_LONDON, startDt, endDt, low[i], high[i]);
+         addBox(&boxes, LIT_SESSION_LONDON, startDt, endDt, low[i], high[i], i);
         }
 
       // New York
@@ -157,7 +190,7 @@ int OnCalculate(const int rates_total,
 
       if(currDt >= startDt && currDt < endDt)
         {
-         addBox(&boxes, LIT_SESSION_NEWYORK, startDt, endDt, low[i], high[i]);
+         addBox(&boxes, LIT_SESSION_NEWYORK, startDt, endDt, low[i], high[i], i);
         }
 
       // Tokyo
@@ -168,7 +201,7 @@ int OnCalculate(const int rates_total,
 
       if(currDt >= startDt && currDt < endDt)
         {
-         addBox(&boxes, LIT_SESSION_TOKYO, startDt, endDt, low[i], high[i]);
+         addBox(&boxes, LIT_SESSION_TOKYO, startDt, endDt, low[i], high[i], i);
         }
      }
 
@@ -179,9 +212,9 @@ int OnCalculate(const int rates_total,
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-//|                                                                  |
+//| Add or update existing box and draw it                           |
 //+------------------------------------------------------------------+
-void addBox(CArrayObj *allBoxes, ENUM_LIT_SESSION_TYPE type, datetime start, datetime end, double low, double high)
+void addBox(CArrayObj *allBoxes, ENUM_LIT_SESSION_TYPE sType, datetime start, datetime end, double low, double high, int i)
   {
    Box *box = allBoxes.Total() > 0
               ? allBoxes.At(allBoxes.Total() - 1)
@@ -197,10 +230,24 @@ void addBox(CArrayObj *allBoxes, ENUM_LIT_SESSION_TYPE type, datetime start, dat
      }
    else
      {
-      box = new Box(type, start, end, NormalizeDouble(low, _Digits), NormalizeDouble(high, _Digits));
+      box = new Box(sType, start, end, NormalizeDouble(low, _Digits), NormalizeDouble(high, _Digits));
       boxes.Add(box);
      }
 
    box.draw();
+   Print("box drawn");
+
+   setBuffers(box, i);
+  }
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| Fill indicator buffers                                           |
+//+------------------------------------------------------------------+
+void setBuffers(Box *box, int i)
+  {
+   TypeBuffer[i] = box.getTypeAsNumber();
+   LowBuffer[i] = box.low;
+   HighBuffer[i] = box.high;
   }
 //+------------------------------------------------------------------+
