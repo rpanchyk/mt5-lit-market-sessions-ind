@@ -18,7 +18,7 @@ Make a decision to BUY/SELL using indicator:
 ![docs](docs/LitMarketSessions_view.png)
 
 ## History
-This indicator is based on [LIT - Timing](docs/LIT - Timing.txt) 
+This indicator is based on [LIT - Timing](docs/LIT_Timing.txt) 
 originally developed by Reimfx for [TradingView](https://www.tradingview.com/script/vukoCtAk/).
 
 ## Contribution
