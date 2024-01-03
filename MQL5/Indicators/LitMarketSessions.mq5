@@ -1,10 +1,11 @@
 //+------------------------------------------------------------------+
 //|                                            LitMarketSessions.mq5 |
 //|                                         Copyright 2024, rpanchyk |
-//|               https://github.com/rpanchyk/fx-lit-market-sessions |
+//|           https://github.com/rpanchyk/fx-lit-market-sessions-ind |
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2024, rpanchyk"
-#property link      "https://github.com/rpanchyk/fx-lit-market-sessions"
+#property link      "https://github.com/rpanchyk/fx-lit-market-sessions-ind"
+#property description "Indicator shows LIT market sessions"
 #property version   "1.00"
 
 #property indicator_chart_window
