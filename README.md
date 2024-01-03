@@ -13,7 +13,7 @@ Available settings of indicator:
 ![docs](docs/LitMarketSessions_config.png)
 
 ## Usage
-Make a decision for BUY/SELL order using signals of indicator:
+Make a decision to BUY/SELL using indicator:
 
 ![docs](docs/LitMarketSessions_view.png)
 
