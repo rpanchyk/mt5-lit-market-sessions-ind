@@ -15,6 +15,24 @@
 #include <Object.mqh>
 #include <arrays/arrayobj.mqh>
 
+enum ENUM_TIME_ZONE
+  {
+   TZauto = 99, // auto
+   TZp6 = 6, // +6
+   TZp5 = 5, // +5
+   TZp4 = 4, // +4
+   TZp3 = 3, // +3
+   TZp2 = 2, // +2
+   TZp1 = 1, // +1
+   TZp0 = 0, // 0
+   TZm1 = -1, // -1
+   TZm2 = -2, // -2
+   TZm3 = -3, // -3
+   TZm4 = -4, // -4
+   TZm5 = -5, // -5
+   TZm6 = -6 // -6
+  };
+
 enum ENUM_BORDER_STYLE
   {
    BORDER_STYLE_SOLID = STYLE_SOLID, // Solid
@@ -107,7 +125,9 @@ double LowBuffer[];
 double HighBuffer[];
 
 // input parameters
-//sinput string _100 = "=== Section :: Main ===";
+sinput string _10 = "=== Section :: Main ===";
+input ENUM_TIME_ZONE inpTimeZoneOffsetHours = TZauto; // Time zone (offset in hours)
+sinput string _20 = "=== Section :: Style ===";
 input color inpLondonSessionColor = clrLightGreen; // London session color
 input color inpNewyorkSessionColor = clrYellow; // NewYork session color
 input color inpTokyoSessionColor = clrLightGray; // Tokyo session color
@@ -176,18 +196,21 @@ int OnCalculate(const int rates_total,
    datetime startDt;
    datetime endDt;
 
+   int timeShift = (inpTimeZoneOffsetHours == TZauto ? getTimeZoneOffsetHours() : inpTimeZoneOffsetHours) * 60 * 60;
+
    for(int i = limit - 1; i > 0; i--)
      {
-      Print(i, " at ", TimeToString(time[i]));
+      datetime dt = time[i] - timeShift;
+      Print(i, " at ", TimeToString(dt), " GMT");
 
-      TimeToStruct(time[i], currMdt);
+      TimeToStruct(dt, currMdt);
       currDt = StructToTime(currMdt);
 
-      TimeToStruct(time[i], startMdt);
+      TimeToStruct(dt, startMdt);
       startMdt.min = 0;
       startMdt.sec = 0;
 
-      TimeToStruct(time[i], endMdt);
+      TimeToStruct(dt, endMdt);
       endMdt.min = 0;
       endMdt.sec = 0;
 
@@ -199,7 +222,7 @@ int OnCalculate(const int rates_total,
 
       if(currDt >= startDt && currDt < endDt)
         {
-         addBox(&boxes, LIT_SESSION_LONDON, startDt, endDt, low[i], high[i], i);
+         addBox(&boxes, LIT_SESSION_LONDON, startDt + timeShift, endDt + timeShift, low[i], high[i], i);
         }
 
       // New York
@@ -210,7 +233,7 @@ int OnCalculate(const int rates_total,
 
       if(currDt >= startDt && currDt < endDt)
         {
-         addBox(&boxes, LIT_SESSION_NEWYORK, startDt, endDt, low[i], high[i], i);
+         addBox(&boxes, LIT_SESSION_NEWYORK, startDt + timeShift, endDt + timeShift, low[i], high[i], i);
         }
 
       // Tokyo
@@ -221,7 +244,7 @@ int OnCalculate(const int rates_total,
 
       if(currDt >= startDt && currDt < endDt)
         {
-         addBox(&boxes, LIT_SESSION_TOKYO, startDt, endDt, low[i], high[i], i);
+         addBox(&boxes, LIT_SESSION_TOKYO, startDt + timeShift, endDt + timeShift, low[i], high[i], i);
         }
      }
 
@@ -230,6 +253,21 @@ int OnCalculate(const int rates_total,
    return rates_total;
   }
 //+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| Get time zone offset in hours                                    |
+//+------------------------------------------------------------------+
+int getTimeZoneOffsetHours()
+  {
+   datetime serverTime = TimeTradeServer();
+   datetime gmtTime = TimeGMT();
+
+   int offsetSeconds = ((int)serverTime) - ((int)gmtTime);
+   int offsetHours = offsetSeconds / 3600;
+
+   Print("Detected server offset: ", IntegerToString(offsetHours), " hrs");
+   return offsetHours;
+  }
 
 //+------------------------------------------------------------------+
 //| Add or update existing box and draw it                           |
