@@ -137,6 +137,7 @@ input int inpBoderWidth = 2; // Border line width
 
 // runtime
 CArrayObj boxes;
+int timeShift;
 
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
@@ -150,6 +151,8 @@ int OnInit()
    SetIndexBuffer(0, TypeBuffer, INDICATOR_DATA);
    SetIndexBuffer(1, LowBuffer, INDICATOR_DATA);
    SetIndexBuffer(2, HighBuffer, INDICATOR_DATA);
+
+   timeShift = (inpTimeZoneOffsetHours == TZauto ? getTimeZoneOffsetHours() : inpTimeZoneOffsetHours) * 60 * 60;
 
    return INIT_SUCCEEDED;
   }
@@ -196,11 +199,9 @@ int OnCalculate(const int rates_total,
    datetime startDt;
    datetime endDt;
 
-   int timeShift = (inpTimeZoneOffsetHours == TZauto ? getTimeZoneOffsetHours() : inpTimeZoneOffsetHours) * 60 * 60;
-
    for(int i = limit - 1; i > 0; i--)
      {
-      datetime dt = time[i] - timeShift;
+      datetime dt = time[i];
       Print(i, " at ", TimeToString(dt), " GMT");
 
       TimeToStruct(dt, currMdt);
@@ -217,34 +218,34 @@ int OnCalculate(const int rates_total,
       // London
       startMdt.hour = 8;
       endMdt.hour = 9;
-      startDt = StructToTime(startMdt);
-      endDt = StructToTime(endMdt);
+      startDt = StructToTime(startMdt) + timeShift;
+      endDt = StructToTime(endMdt) + timeShift;
 
       if(currDt >= startDt && currDt < endDt)
         {
-         addBox(&boxes, LIT_SESSION_LONDON, startDt + timeShift, endDt + timeShift, low[i], high[i], i);
+         addBox(&boxes, LIT_SESSION_LONDON, startDt, endDt, low[i], high[i], i);
         }
 
       // New York
       startMdt.hour = 13;
       endMdt.hour = 14;
-      startDt = StructToTime(startMdt);
-      endDt = StructToTime(endMdt);
+      startDt = StructToTime(startMdt) + timeShift;
+      endDt = StructToTime(endMdt) + timeShift;
 
       if(currDt >= startDt && currDt < endDt)
         {
-         addBox(&boxes, LIT_SESSION_NEWYORK, startDt + timeShift, endDt + timeShift, low[i], high[i], i);
+         addBox(&boxes, LIT_SESSION_NEWYORK, startDt, endDt, low[i], high[i], i);
         }
 
       // Tokyo
       startMdt.hour = 23;
       endMdt.hour = 6;
-      startDt = StructToTime(startMdt) - 86400; // prev day
-      endDt = StructToTime(endMdt);
+      startDt = StructToTime(startMdt) - 86400 + timeShift; // prev day
+      endDt = StructToTime(endMdt) + timeShift;
 
       if(currDt >= startDt && currDt < endDt)
         {
-         addBox(&boxes, LIT_SESSION_TOKYO, startDt + timeShift, endDt + timeShift, low[i], high[i], i);
+         addBox(&boxes, LIT_SESSION_TOKYO, startDt, endDt, low[i], high[i], i);
         }
      }
 
