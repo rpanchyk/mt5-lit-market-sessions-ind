@@ -1,4 +1,4 @@
-# Forex LIT Market Sessions Indicator
+# Forex LIT Market Sessions Indicator for MT5 
 Indicator shows Liquidity Inducement Theorem market sessions in MetaTrader 5.
 
 ## Installation
