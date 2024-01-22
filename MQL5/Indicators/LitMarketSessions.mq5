@@ -72,7 +72,7 @@ public:
          ObjectSetInteger(0, objName, OBJPROP_COLOR, getTypeAsColor());
          ObjectSetInteger(0, objName, OBJPROP_FILL, InpFill);
          ObjectSetInteger(0, objName, OBJPROP_STYLE, InpBoderStyle);
-         ObjectSetInteger(0, objName, OBJPROP_WIDTH, InpBoderWidth);
+         ObjectSetInteger(0, objName, OBJPROP_WIDTH, InpBorderWidth);
          ObjectSetInteger(0, objName, OBJPROP_BACK, true);
          ObjectSetInteger(0, objName, OBJPROP_SELECTABLE, false);
          ObjectSetInteger(0, objName, OBJPROP_SELECTED, false);
@@ -92,11 +92,11 @@ public:
       switch(type)
         {
          case  LIT_SESSION_LONDON:
-            return InpLondonSessionColor;
+            return InpLondonColor;
          case  LIT_SESSION_NEWYORK:
-            return InpNewyorkSessionColor;
+            return InpNewyorkColor;
          case  LIT_SESSION_TOKYO:
-            return InpTokyoSessionColor;
+            return InpTokyoColor;
          default:
             Print("Unknown type");
             return -1;
@@ -128,13 +128,16 @@ double HighBuffer[];
 // config
 input group "Section :: Main";
 input ENUM_TIME_ZONE InpTimeZoneOffsetHours = TZauto; // Time zone (offset in hours)
+input bool InpLondonShow = true; // Show London
+input bool InpNewyorkShow = true; // Show NewYork
+input bool InpTokyoShow = true; // Show Tokyo
 input group "Section :: Style";
-input color InpLondonSessionColor = clrLightGreen; // London session color
-input color InpNewyorkSessionColor = clrYellow; // NewYork session color
-input color InpTokyoSessionColor = clrLightGray; // Tokyo session color
+input color InpLondonColor = clrLightGreen; // London color
+input color InpNewyorkColor = clrYellow; // NewYork color
+input color InpTokyoColor = clrLightGray; // Tokyo color
 input bool InpFill = true; // Fill solid (true) or transparent (false)
 input ENUM_BORDER_STYLE InpBoderStyle = BORDER_STYLE_SOLID; // Border line style
-input int InpBoderWidth = 2; // Border line width
+input int InpBorderWidth = 2; // Border line width
 
 // runtime
 CArrayObj boxes;
@@ -224,36 +227,45 @@ int OnCalculate(const int rates_total,
       endMdt.sec = 0;
 
       // London
-      startMdt.hour = 8;
-      endMdt.hour = 9;
-      startDt = StructToTime(startMdt) + timeShiftSec;
-      endDt = StructToTime(endMdt) + timeShiftSec;
-
-      if(currDt >= startDt && currDt < endDt)
+      if(InpLondonShow)
         {
-         addBox(&boxes, LIT_SESSION_LONDON, startDt, endDt, low[i], high[i], i);
+         startMdt.hour = 8;
+         endMdt.hour = 9;
+         startDt = StructToTime(startMdt) + timeShiftSec;
+         endDt = StructToTime(endMdt) + timeShiftSec;
+
+         if(currDt >= startDt && currDt < endDt)
+           {
+            addBox(&boxes, LIT_SESSION_LONDON, startDt, endDt, low[i], high[i], i);
+           }
         }
 
       // NewYork
-      startMdt.hour = 13;
-      endMdt.hour = 14;
-      startDt = StructToTime(startMdt) + timeShiftSec;
-      endDt = StructToTime(endMdt) + timeShiftSec;
-
-      if(currDt >= startDt && currDt < endDt)
+      if(InpNewyorkShow)
         {
-         addBox(&boxes, LIT_SESSION_NEWYORK, startDt, endDt, low[i], high[i], i);
+         startMdt.hour = 13;
+         endMdt.hour = 14;
+         startDt = StructToTime(startMdt) + timeShiftSec;
+         endDt = StructToTime(endMdt) + timeShiftSec;
+
+         if(currDt >= startDt && currDt < endDt)
+           {
+            addBox(&boxes, LIT_SESSION_NEWYORK, startDt, endDt, low[i], high[i], i);
+           }
         }
 
       // Tokyo
-      startMdt.hour = 23;
-      endMdt.hour = 6;
-      startDt = StructToTime(startMdt) - 86400 + timeShiftSec; // prev day
-      endDt = StructToTime(endMdt) + timeShiftSec;
-
-      if(currDt >= startDt && currDt < endDt)
+      if(InpTokyoShow)
         {
-         addBox(&boxes, LIT_SESSION_TOKYO, startDt, endDt, low[i], high[i], i);
+         startMdt.hour = 23;
+         endMdt.hour = 6;
+         startDt = StructToTime(startMdt) - 86400 + timeShiftSec; // prev day
+         endDt = StructToTime(endMdt) + timeShiftSec;
+
+         if(currDt >= startDt && currDt < endDt)
+           {
+            addBox(&boxes, LIT_SESSION_TOKYO, startDt, endDt, low[i], high[i], i);
+           }
         }
      }
 
