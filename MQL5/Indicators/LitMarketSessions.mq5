@@ -1,17 +1,18 @@
 //+------------------------------------------------------------------+
 //|                                            LitMarketSessions.mq5 |
 //|                                         Copyright 2024, rpanchyk |
-//|           https://github.com/rpanchyk/mt5-lit-market-sessions-ind |
+//|                                      https://github.com/rpanchyk |
 //+------------------------------------------------------------------+
-#property copyright   "Copyright 2024, rpanchyk"
-#property link        "https://github.com/rpanchyk/mt5-lit-market-sessions-ind"
+#property copyright "Copyright 2024, rpanchyk"
+#property link      "https://github.com/rpanchyk"
+#property version   "1.00"
 #property description "Indicator shows LIT market sessions"
-#property version     "1.00"
 
 #property indicator_chart_window
 #property indicator_buffers 3
 #property indicator_plots 0
 
+// includes
 #include <Object.mqh>
 #include <arrays/arrayobj.mqh>
 
@@ -124,10 +125,10 @@ double TypeBuffer[];
 double LowBuffer[];
 double HighBuffer[];
 
-// input parameters
-sinput string _10 = "=== Section :: Main ===";
+// config
+input group "Section :: Main";
 input ENUM_TIME_ZONE inpTimeZoneOffsetHours = TZauto; // Time zone (offset in hours)
-sinput string _20 = "=== Section :: Style ===";
+input group "Section :: Style";
 input color inpLondonSessionColor = clrLightGreen; // London session color
 input color inpNewyorkSessionColor = clrYellow; // NewYork session color
 input color inpTokyoSessionColor = clrLightGray; // Tokyo session color
@@ -144,6 +145,8 @@ int timeShift;
 //+------------------------------------------------------------------+
 int OnInit()
   {
+   Print("Initialization started");
+
    ArraySetAsSeries(TypeBuffer, true);
    ArraySetAsSeries(LowBuffer, true);
    ArraySetAsSeries(HighBuffer, true);
@@ -154,6 +157,7 @@ int OnInit()
 
    timeShift = (inpTimeZoneOffsetHours == TZauto ? getTimeZoneOffsetHours() : inpTimeZoneOffsetHours) * 60 * 60;
 
+   Print("Initialization finished");
    return INIT_SUCCEEDED;
   }
 
@@ -162,7 +166,11 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
   {
+   Print("Deinitialization started");
+
    ObjectsDeleteAll(0, "sbox");
+
+   Print("Deinitialization finished");
   }
 
 //+------------------------------------------------------------------+
@@ -189,7 +197,7 @@ int OnCalculate(const int rates_total,
    ArraySetAsSeries(low, true);
 
    int limit = rates_total - prev_calculated;
-   Print("rates_total=", rates_total, " prev_calculated=", prev_calculated, " limit=", limit);
+   PrintFormat("RatesTotal: %i, PrevCalculated: %i, Limit: %i", rates_total, prev_calculated, limit);
 
    MqlDateTime currMdt;
    MqlDateTime startMdt;
@@ -202,7 +210,7 @@ int OnCalculate(const int rates_total,
    for(int i = limit - 1; i > 0; i--)
      {
       datetime dt = time[i];
-      Print(i, " at ", TimeToString(dt), " GMT");
+      //Print(i, " at ", TimeToString(dt), " GMT");
 
       TimeToStruct(dt, currMdt);
       currDt = StructToTime(currMdt);
@@ -226,7 +234,7 @@ int OnCalculate(const int rates_total,
          addBox(&boxes, LIT_SESSION_LONDON, startDt, endDt, low[i], high[i], i);
         }
 
-      // New York
+      // NewYork
       startMdt.hour = 13;
       endMdt.hour = 14;
       startDt = StructToTime(startMdt) + timeShift;
@@ -249,11 +257,9 @@ int OnCalculate(const int rates_total,
         }
      }
 
-   Print("boxes=", boxes.Total());
-
+   Print("Drawn boxes: ", boxes.Total());
    return rates_total;
   }
-//+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
 //| Get time zone offset in hours                                    |
@@ -294,11 +300,10 @@ void addBox(CArrayObj *allBoxes, ENUM_LIT_SESSION_TYPE sType, datetime start, da
      }
 
    box.draw();
-   Print("box drawn");
+//Print("box drawn");
 
    setBuffers(box, i);
   }
-//+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
 //| Fill indicator buffers                                           |
