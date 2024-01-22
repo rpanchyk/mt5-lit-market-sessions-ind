@@ -70,9 +70,9 @@ public:
          ObjectCreate(0, objName, OBJ_RECTANGLE, 0, start, low, end, high);
 
          ObjectSetInteger(0, objName, OBJPROP_COLOR, getTypeAsColor());
-         ObjectSetInteger(0, objName, OBJPROP_FILL, inpFill);
-         ObjectSetInteger(0, objName, OBJPROP_STYLE, inpBoderStyle);
-         ObjectSetInteger(0, objName, OBJPROP_WIDTH, inpBoderWidth);
+         ObjectSetInteger(0, objName, OBJPROP_FILL, InpFill);
+         ObjectSetInteger(0, objName, OBJPROP_STYLE, InpBoderStyle);
+         ObjectSetInteger(0, objName, OBJPROP_WIDTH, InpBoderWidth);
          ObjectSetInteger(0, objName, OBJPROP_BACK, true);
          ObjectSetInteger(0, objName, OBJPROP_SELECTABLE, false);
          ObjectSetInteger(0, objName, OBJPROP_SELECTED, false);
@@ -92,11 +92,11 @@ public:
       switch(type)
         {
          case  LIT_SESSION_LONDON:
-            return inpLondonSessionColor;
+            return InpLondonSessionColor;
          case  LIT_SESSION_NEWYORK:
-            return inpNewyorkSessionColor;
+            return InpNewyorkSessionColor;
          case  LIT_SESSION_TOKYO:
-            return inpTokyoSessionColor;
+            return InpTokyoSessionColor;
          default:
             Print("Unknown type");
             return -1;
@@ -127,18 +127,18 @@ double HighBuffer[];
 
 // config
 input group "Section :: Main";
-input ENUM_TIME_ZONE inpTimeZoneOffsetHours = TZauto; // Time zone (offset in hours)
+input ENUM_TIME_ZONE InpTimeZoneOffsetHours = TZauto; // Time zone (offset in hours)
 input group "Section :: Style";
-input color inpLondonSessionColor = clrLightGreen; // London session color
-input color inpNewyorkSessionColor = clrYellow; // NewYork session color
-input color inpTokyoSessionColor = clrLightGray; // Tokyo session color
-input bool inpFill = true; // Fill solid (true) or transparent (false)
-input ENUM_BORDER_STYLE inpBoderStyle = BORDER_STYLE_SOLID; // Border line style
-input int inpBoderWidth = 2; // Border line width
+input color InpLondonSessionColor = clrLightGreen; // London session color
+input color InpNewyorkSessionColor = clrYellow; // NewYork session color
+input color InpTokyoSessionColor = clrLightGray; // Tokyo session color
+input bool InpFill = true; // Fill solid (true) or transparent (false)
+input ENUM_BORDER_STYLE InpBoderStyle = BORDER_STYLE_SOLID; // Border line style
+input int InpBoderWidth = 2; // Border line width
 
 // runtime
 CArrayObj boxes;
-int timeShift;
+int timeShiftSec;
 
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
@@ -155,7 +155,7 @@ int OnInit()
    SetIndexBuffer(1, LowBuffer, INDICATOR_DATA);
    SetIndexBuffer(2, HighBuffer, INDICATOR_DATA);
 
-   timeShift = (inpTimeZoneOffsetHours == TZauto ? getTimeZoneOffsetHours() : inpTimeZoneOffsetHours) * 60 * 60;
+   timeShiftSec = (InpTimeZoneOffsetHours == TZauto ? getTimeZoneOffsetHours() : InpTimeZoneOffsetHours) * 60 * 60;
 
    Print("Initialization finished");
    return INIT_SUCCEEDED;
@@ -226,8 +226,8 @@ int OnCalculate(const int rates_total,
       // London
       startMdt.hour = 8;
       endMdt.hour = 9;
-      startDt = StructToTime(startMdt) + timeShift;
-      endDt = StructToTime(endMdt) + timeShift;
+      startDt = StructToTime(startMdt) + timeShiftSec;
+      endDt = StructToTime(endMdt) + timeShiftSec;
 
       if(currDt >= startDt && currDt < endDt)
         {
@@ -237,8 +237,8 @@ int OnCalculate(const int rates_total,
       // NewYork
       startMdt.hour = 13;
       endMdt.hour = 14;
-      startDt = StructToTime(startMdt) + timeShift;
-      endDt = StructToTime(endMdt) + timeShift;
+      startDt = StructToTime(startMdt) + timeShiftSec;
+      endDt = StructToTime(endMdt) + timeShiftSec;
 
       if(currDt >= startDt && currDt < endDt)
         {
@@ -248,8 +248,8 @@ int OnCalculate(const int rates_total,
       // Tokyo
       startMdt.hour = 23;
       endMdt.hour = 6;
-      startDt = StructToTime(startMdt) - 86400 + timeShift; // prev day
-      endDt = StructToTime(endMdt) + timeShift;
+      startDt = StructToTime(startMdt) - 86400 + timeShiftSec; // prev day
+      endDt = StructToTime(endMdt) + timeShiftSec;
 
       if(currDt >= startDt && currDt < endDt)
         {
