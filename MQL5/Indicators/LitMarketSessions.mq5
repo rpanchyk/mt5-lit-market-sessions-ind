@@ -10,7 +10,7 @@
 
 #property indicator_chart_window
 #property indicator_buffers 3
-#property indicator_plots 0
+#property indicator_plots 1
 
 // includes
 #include <Object.mqh>
@@ -53,13 +53,13 @@ enum ENUM_LIT_SESSION_TYPE
 class Box : public CObject
   {
 public:
-                     Box(ENUM_LIT_SESSION_TYPE sType, datetime startDt, datetime endDt, double lowPrice, double highPrice)
+                     Box(ENUM_LIT_SESSION_TYPE inType, datetime inStart, datetime inEnd, double inLow, double inHigh)
      {
-      this.type = sType;
-      this.start = startDt;
-      this.end = endDt;
-      this.low = lowPrice;
-      this.high = highPrice;
+      this.type = inType;
+      this.start = inStart;
+      this.end = inEnd;
+      this.low = inLow;
+      this.high = inHigh;
      }
 
    void              draw()
@@ -80,12 +80,6 @@ public:
          ObjectSetInteger(0, objName, OBJPROP_ZORDER, 0);
         }
      }
-
-   ENUM_LIT_SESSION_TYPE type;
-   datetime          start;
-   datetime          end;
-   double            low;
-   double            high;
 
    long              getTypeAsColor()
      {
@@ -118,6 +112,12 @@ public:
             return -1;
         }
      }
+
+   ENUM_LIT_SESSION_TYPE type;
+   datetime          start;
+   datetime          end;
+   double            low;
+   double            high;
   };
 
 // buffers
@@ -291,7 +291,7 @@ int getTimeZoneOffsetHours()
 //+------------------------------------------------------------------+
 //| Add or update existing box and draw it                           |
 //+------------------------------------------------------------------+
-void addBox(CArrayObj *allBoxes, ENUM_LIT_SESSION_TYPE sType, datetime start, datetime end, double low, double high, int i)
+void addBox(CArrayObj *allBoxes, ENUM_LIT_SESSION_TYPE type, datetime start, datetime end, double low, double high, int i)
   {
    Box *box = allBoxes.Total() > 0
               ? allBoxes.At(allBoxes.Total() - 1)
@@ -307,7 +307,7 @@ void addBox(CArrayObj *allBoxes, ENUM_LIT_SESSION_TYPE sType, datetime start, da
      }
    else
      {
-      box = new Box(sType, start, end, NormalizeDouble(low, _Digits), NormalizeDouble(high, _Digits));
+      box = new Box(type, start, end, NormalizeDouble(low, _Digits), NormalizeDouble(high, _Digits));
       boxes.Add(box);
      }
 
