@@ -150,13 +150,17 @@ int OnInit()
   {
    Print("Initialization started");
 
+   ArrayInitialize(TypeBuffer, 0);
+   ArrayInitialize(LowBuffer, 0);
+   ArrayInitialize(HighBuffer, 0);
+
    ArraySetAsSeries(TypeBuffer, true);
    ArraySetAsSeries(LowBuffer, true);
    ArraySetAsSeries(HighBuffer, true);
 
    SetIndexBuffer(0, TypeBuffer, INDICATOR_DATA);
-   SetIndexBuffer(1, LowBuffer, INDICATOR_DATA);
-   SetIndexBuffer(2, HighBuffer, INDICATOR_DATA);
+   SetIndexBuffer(1, LowBuffer, INDICATOR_CALCULATIONS);
+   SetIndexBuffer(2, HighBuffer, INDICATOR_CALCULATIONS);
 
    timeShiftSec = (InpTimeZoneOffsetHours == TZauto ? getTimeZoneOffsetHours() : InpTimeZoneOffsetHours) * 60 * 60;
 
@@ -199,7 +203,7 @@ int OnCalculate(const int rates_total,
    ArraySetAsSeries(high, true);
    ArraySetAsSeries(low, true);
 
-   int limit = rates_total - prev_calculated;
+   int limit = (int) MathMin(rates_total, rates_total - prev_calculated + 1);
    PrintFormat("RatesTotal: %i, PrevCalculated: %i, Limit: %i", rates_total, prev_calculated, limit);
 
    MqlDateTime currMdt;
