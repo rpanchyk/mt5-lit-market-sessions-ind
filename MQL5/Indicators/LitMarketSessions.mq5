@@ -204,7 +204,7 @@ int OnCalculate(const int rates_total,
    ArraySetAsSeries(low, true);
 
    int limit = (int) MathMin(rates_total, rates_total - prev_calculated + 1);
-   PrintFormat("RatesTotal: %i, PrevCalculated: %i, Limit: %i", rates_total, prev_calculated, limit);
+//PrintFormat("RatesTotal: %i, PrevCalculated: %i, Limit: %i", rates_total, prev_calculated, limit);
 
    MqlDateTime currMdt;
    MqlDateTime startMdt;
@@ -273,7 +273,7 @@ int OnCalculate(const int rates_total,
         }
      }
 
-   Print("Drawn boxes: ", boxes.Total());
+//Print("Drawn boxes: ", boxes.Total());
    return rates_total;
   }
 
@@ -301,22 +301,31 @@ void addBox(CArrayObj *allBoxes, ENUM_LIT_SESSION_TYPE type, datetime start, dat
               ? allBoxes.At(allBoxes.Total() - 1)
               : NULL;
 
+   double lowNormalized = NormalizeDouble(low, _Digits);
+   double highNormalized = NormalizeDouble(high, _Digits);
+
    if(box != NULL && box.start == start)
      {
-      box.end = end;
-      box.low = MathMin(box.low, NormalizeDouble(low, _Digits));
-      box.high = MathMax(box.high, NormalizeDouble(high, _Digits));
+      if(box.low > lowNormalized || box.high < highNormalized)
+        {
+         box.end = end;
+         box.low = MathMin(box.low, lowNormalized);
+         box.high = MathMax(box.high, highNormalized);
 
-      ObjectsDeleteAll(0, "sbox " + TimeToString(start));
+         ObjectsDeleteAll(0, "sbox " + TimeToString(start));
+
+         box.draw();
+         Print("box redrawn");
+        }
      }
    else
      {
-      box = new Box(type, start, end, NormalizeDouble(low, _Digits), NormalizeDouble(high, _Digits));
+      box = new Box(type, start, end, lowNormalized, highNormalized);
       boxes.Add(box);
-     }
 
-   box.draw();
-//Print("box drawn");
+      box.draw();
+      Print("new box drawn");
+     }
 
    setBuffers(box, i);
   }
